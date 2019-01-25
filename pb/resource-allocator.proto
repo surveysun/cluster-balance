@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+option go_package="gitlab.sz.sensetime.com/viper/resource-allocator/api";
+option java_package="com.sensetime.viper.resource_allocator";
+package sensetime.viper.resource_allocator;
+
+message NodeStatus {
+    map<string, uint64> quotas = 1;
+}
+
+message NodeSpec {
+    string cluster_id = 1;
+    string id = 2;
+    map<string, uint64> quotas = 3;
+    map<string, string> labels = 4;
+    int32 version = 5;
+    NodeStatus status = 6;
+    bytes payload = 7;
+}
+
+message ResourceStatus {
+    int64 version = 1;
+    bytes payload = 2;
+}
+
+message ResourceSpec {
+    string id = 1;
+    map<string, uint64> limits = 2;
+    map<string, string> required_labels = 3;
+    string assigned_node = 4;
+    int32 version = 5;
+    bytes payload = 6;
+
+    ResourceStatus status = 7;
+    int64 creation_time = 8;
+}
+
