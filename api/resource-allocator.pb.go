@@ -49,11 +49,12 @@ func (m *NodeStatus) GetQuotas() map[string]uint64 {
 type NodeSpec struct {
 	ClusterId string            `protobuf:"bytes,1,opt,name=cluster_id,json=clusterId" json:"cluster_id,omitempty"`
 	Id        string            `protobuf:"bytes,2,opt,name=id" json:"id,omitempty"`
+	//map[类型]算力
 	Quotas    map[string]uint64 `protobuf:"bytes,3,rep,name=quotas" json:"quotas,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	//use to match Type, all the labels is match
 	Labels    map[string]string `protobuf:"bytes,4,rep,name=labels" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	Version   int32             `protobuf:"varint,5,opt,name=version" json:"version,omitempty"`
-	//当前节点的计算能力状态
+	//当前节点的已经使用的任务 map[task_id]算力
 	Status    *NodeStatus       `protobuf:"bytes,6,opt,name=status" json:"status,omitempty"`
 	Payload   []byte            `protobuf:"bytes,7,opt,name=payload,proto3" json:"payload,omitempty"`
 }
@@ -114,6 +115,7 @@ func (m *NodeSpec) GetPayload() []byte {
 
 type ResourceStatus struct {
 	Version int64  `protobuf:"varint,1,opt,name=version" json:"version,omitempty"`
+	//资源状态
 	Payload []byte `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
@@ -139,6 +141,7 @@ func (m *ResourceStatus) GetPayload() []byte {
 type ResourceSpec struct {
 	Id             string            `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 	Limits         map[string]uint64 `protobuf:"bytes,2,rep,name=limits" json:"limits,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	//标签类型，用来匹配节点
 	RequiredLabels map[string]string `protobuf:"bytes,3,rep,name=required_labels,json=requiredLabels" json:"required_labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	AssignedNode   string            `protobuf:"bytes,4,opt,name=assigned_node,json=assignedNode" json:"assigned_node,omitempty"`
 	Version        int32             `protobuf:"varint,5,opt,name=version" json:"version,omitempty"`

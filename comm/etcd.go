@@ -53,6 +53,7 @@ func (e *EtcdHander)Put(key string, value string)error{
 	return err
 }
 
+// if the key is not exist, return nil,nil
 func (e *EtcdHander)Get(key string)( *KV, error){
 	re, err := e.client.Get(context.Background(), key)
 	if err != nil{
@@ -101,6 +102,22 @@ func (e *EtcdHander)Delete(key string)( *KV, error){
 	return nil, nil
 }
 
+func (e *EtcdHander)DeleteAll(key string)( *KV, error){
+	re, err := e.client.Delete(context.Background(), key, clientv3.WithPrefix())
+	if err != nil{
+		return nil, err
+	}
+
+	if len(re.PrevKvs) >= 1 {
+		return &KV{
+			key: string(re.PrevKvs[0].Key),
+			value: string(re.PrevKvs[0].Value),
+		},nil
+	}
+
+	return nil, nil
+}
+
 func (e *EtcdHander)Watch(key string, put CallbackHanderWatchPut, delete CallbackHanderWatchDelete) error {
 	rch := e.client.Watch(context.Background(), key)
 	for wresp := range rch {
@@ -110,7 +127,7 @@ func (e *EtcdHander)Watch(key string, put CallbackHanderWatchPut, delete Callbac
 			} else if ev.Type == clientv3.EventTypeDelete {
 				delete(ev.Kv.Key, ev.Kv.Value)
 			} else {
-				fmt.Println("event.Type:", ev.Type, " key:", string(ev.Kv.Key))
+				fmt.Println("error event.Type:", ev.Type, " key:", string(ev.Kv.Key))
 			}
 		}
 	}
@@ -120,4 +137,8 @@ func (e *EtcdHander)Watch(key string, put CallbackHanderWatchPut, delete Callbac
 
 func (e *EtcdHander)CloseWatch(key string){
 
+}
+
+func (e *EtcdHander)CloseWatchAll() error {
+	return e.client.Close()
 }
