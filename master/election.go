@@ -1,5 +1,6 @@
 package master
 
-type Election struct {
+type Election interface {
+	IsLeader() bool
 
 }

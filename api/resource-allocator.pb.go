@@ -50,8 +50,10 @@ type NodeSpec struct {
 	ClusterId string            `protobuf:"bytes,1,opt,name=cluster_id,json=clusterId" json:"cluster_id,omitempty"`
 	Id        string            `protobuf:"bytes,2,opt,name=id" json:"id,omitempty"`
 	Quotas    map[string]uint64 `protobuf:"bytes,3,rep,name=quotas" json:"quotas,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	//use to match Type, all the labels is match
 	Labels    map[string]string `protobuf:"bytes,4,rep,name=labels" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	Version   int32             `protobuf:"varint,5,opt,name=version" json:"version,omitempty"`
+	//当前节点的计算能力状态
 	Status    *NodeStatus       `protobuf:"bytes,6,opt,name=status" json:"status,omitempty"`
 	Payload   []byte            `protobuf:"bytes,7,opt,name=payload,proto3" json:"payload,omitempty"`
 }
