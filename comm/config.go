@@ -42,6 +42,10 @@ func (c *Config) GetResourcesPath() string {
 	return fmt.Sprintf("%s/%s/resources", BaseNode, c.ClusterID)
 }
 
+func (c *Config) GetStatusPath() string {
+	return fmt.Sprintf("%s/%s/status", BaseNode, c.ClusterID)
+}
+
 func (c *Config) Validate() error {
 	if !utils.ValidateNodeName(c.ClusterID) {
 		return errors.New("invalid cluster id")

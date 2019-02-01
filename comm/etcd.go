@@ -140,5 +140,5 @@ func (e *EtcdHander)CloseWatch(key string){
 }
 
 func (e *EtcdHander)CloseWatchAll() error {
-	return e.client.Close()
+	return e.client.Watcher.Close()
 }

@@ -5,6 +5,7 @@ import (
 	"cluster-balance/comm"
 	"errors"
 	"github.com/golang/protobuf/proto"
+	log "github.com/sirupsen/logrus"
 	"sync/atomic"
 	"time"
 )
@@ -26,10 +27,9 @@ type Master struct {
 	config   *comm.Config
 	etcd     *comm.EtcdHander
 
-
 	nodes     map[string]pb.NodeSpec
 	resources map[string]pb.ResourceSpec
-	status    map[string]string
+	status    map[string]comm.HeartBeat
 
 	scheduler Scheduler
 	requests  chan request
@@ -61,6 +61,12 @@ func (m *Master) isLeader() bool {
 	return atomic.LoadInt32(&m.title) != 0
 }
 
+// logger returns a new log entry with manger id label.
+// log.Entry is not thread-safe.
+func (m *Master) logger() *log.Entry {
+	return log.WithField("managerID", m.masterID)
+}
+
 func (m *Master) findNodeBySpec(spec pb.ResourceSpec) ( string, bool) {
 	for k, v := range m.resources {
 		if k == spec.GetId() {
@@ -73,16 +79,40 @@ func (m *Master) findNodeBySpec(spec pb.ResourceSpec) ( string, bool) {
 	return "", false
 }
 
-func (m *Master) deleteNodeSpec(nod string, spec string) bool {
+func (m *Master) deleteMapNodeSpec(nod string, spec string) bool {
 	soures := m.nodes[nod].GetStatus()
 	if soures == nil || soures.Quotas == nil  {
 		return false
 	}
-	delete(soures.Quotas, spec)
-	return true
+
+	if _, ok := soures.Quotas[spec]; ok {
+		delete(soures.Quotas, spec)
+		return true
+	}
+
+	return false
+}
+
+func (m *Master) deleteMapSpec(spec string) bool {
+	if  _, ok := m.resources[spec]; ok {
+		delete(m.resources, spec)
+		return true
+	}
+	return false
+}
+
+func (m *Master) exitsResource(spec string) bool{
+	if _, ok := m.resources[spec]; ok {
+		return true
+	}
+	return  false
 }
 
 func (m *Master) addResource(spec pb.ResourceSpec) (*pb.NodeSpec, error) {
+	if m.exitsResource(spec.GetId()) {
+		return nil, ErrResourceExits
+	}
+
 	ns := &pb.NodeSpec{}
 	if m.isLeader() {
 		ns, err:= m.scheduler.Assign( m.nodes, &spec)
@@ -105,15 +135,20 @@ func (m *Master) addResource(spec pb.ResourceSpec) (*pb.NodeSpec, error) {
 		return nil, err
 	}
 
-	err = m.etcd.Put( m.config.GetNodesPath() + "/" + spec.AssignedNode + "/" + spec.GetId() , string(data))
-	if err != nil{
-		return nil, err
-	}
 	// resource/task_id use to backups
 	err = m.etcd.Put( m.config.GetResourcesPath() + "/" + spec.GetId() , string(data))
 	if err != nil{
 		return nil, err
 	}
+	m.resources[spec.GetId()] = spec
+	err = m.etcd.Put( m.config.GetNodesPath() + "/" + spec.AssignedNode + "/" + spec.GetId() , string(data))
+	if err != nil{
+		return nil, err
+	}
+
+	ns.GetStatus().Quotas[spec.GetId()] = 1
+
+	m.logger().Info("assign ", spec.GetId(), " ---->", ns.GetId())
 
 	newns := proto.Clone(ns).(*pb.NodeSpec)
 	return newns, nil
@@ -122,6 +157,14 @@ func (m *Master) addResource(spec pb.ResourceSpec) (*pb.NodeSpec, error) {
 func (m *Master) deleteResource(spec pb.ResourceSpec) (*pb.NodeSpec, error) {
 	if m.isLeader() {
 		if nodeId, ok := m.findNodeBySpec(spec); ok {
+			//first delete backups Resources
+			_, err := m.etcd.Delete( m.config.GetResourcesPath() + "/" + spec.GetId())
+			if err != nil{
+				return nil, err
+			}
+			//delete resoures map task info
+			m.deleteMapSpec(spec.GetId())
+
 			if nodeId != ""{
 				_, err := m.etcd.Delete( m.config.GetNodesPath() + "/" + nodeId + "/" + spec.GetId())
 				if err != nil{
@@ -129,16 +172,12 @@ func (m *Master) deleteResource(spec pb.ResourceSpec) (*pb.NodeSpec, error) {
 				}
 
 				//delete node task info
-				m.deleteNodeSpec(nodeId, spec.GetId())
+				m.deleteMapNodeSpec(nodeId, spec.GetId())
+				return nil, nil
 			}
 
-			_, err := m.etcd.Delete( m.config.GetResourcesPath() + "/" + spec.GetId())
-			if err != nil{
-				return nil, err
-			}
-
-			//delete resoures map task info
-
+			node, _ := m.nodes[nodeId]
+			return &node, nil
 		}
 		return nil, ErrNotFindResource
 	}else {
@@ -178,4 +217,46 @@ MainLoop:
 			}
 		}
 	}
+
+	//elector Resign
+
+	m.etcd.Close()
+	m.logger().Info("manager exiting")
+	atomic.StoreInt32(&m.title, 0)
+
+
+	m.shutdown <- true
+}
+
+func (m *Master) AddResource(spec *pb.ResourceSpec) (*pb.NodeSpec, error){
+	if spec.GetId() == "" {
+		return nil, errors.New("invalid resource id")
+	}
+	//must be set by worker
+	if spec.GetStatus() != nil {
+		return nil, errors.New("resource status must be nil")
+	}
+
+	reply := make(chan interface{}, 1)
+	m.requests <- request{req: addResourceRequest(*spec), reply: reply}
+	r := <-reply
+	if err, ok := r.(error); ok {
+		return nil, err
+	}
+	return r.(*pb.NodeSpec), nil
+}
+
+func (m *Master) RemoveResource(spec *pb.ResourceSpec) error {
+	reply := make(chan interface{}, 1)
+	m.requests <- request{req: removeResourceRequest(*spec), reply: reply}
+	r := <-reply
+	if r == nil {
+		return nil
+	}
+	return r.(error)
+}
+
+func (m *Master) Close(){
+	close(m.requests)
+	<-m.shutdown
 }

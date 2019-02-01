@@ -60,7 +60,6 @@ func TestEtcdHander_Watch(t *testing.T) {
 	_, err = etcd.Delete("/home/sunwei/test-2")
 	if err != nil {
 		t.Fatal("Delete err:", err)
-		t.Failed()
 	}
 	t.Log("Delete OK")
 
