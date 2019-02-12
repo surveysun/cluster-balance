@@ -11,22 +11,23 @@ import (
 
 type Worker interface {
 	HanderDoPut(key, value []byte) error
-	HanderDoDelte(key, value []byte) error
+	HanderDoDelete(key, value []byte) error
 }
 
 type Client struct {
 	clientID    string
 	config      *comm.Config
 	etcd        *comm.EtcdHander
+	node		*pb.NodeSpec
 	woker       Worker
 
 	shutdown    chan bool
 	close       chan struct{}
 	createTime  int64
 	workpath    string
-} 
+}
 
-func NewClient(config *comm.Config, clientId string, woker Worker) (*Client, error){
+func NewClient(config *comm.Config, node *pb.NodeSpec, woker Worker) (*Client, error){
 	if err := config.Validate(); err != nil {
 		return nil, err
 	}
@@ -37,32 +38,21 @@ func NewClient(config *comm.Config, clientId string, woker Worker) (*Client, err
 	}
 
 	return &Client{
-		clientID:   clientId,
+		clientID:   node.Id,
 		config:     config,
 		etcd:       etcd,
 		woker:      woker,
-		workpath:   config.GetNodesPath() + "/" + clientId,
+		workpath:   config.GetNodesPath() + "/" + node.Id,
+		node:		node,
 	}, nil
 }
 
-func (c *Client)Register(labels map[string]string, quotas map[string]uint64) error {
-	if labels == nil{
-		return errors.New("the Node labels is nil")
+func (c *Client)register() error {
+	if c.node == nil {
+		return errors.New("node config is error")
 	}
 
-	if quotas == nil {
-		return errors.New("the Node quotas is nil")
-	}
-
-	node := pb.NodeSpec{
-		ClusterId:  c.config.ClusterID,
-		Id:         c.clientID,
-		Labels:     labels,
-		Quotas:     quotas,
-		Version:    1,
-	}
-
-	data, err := proto.Marshal(&node)
+	data, err := proto.Marshal(c.node)
 	if err != nil{
 		return errors.New("Marshal node info failed")
 	}
@@ -92,8 +82,14 @@ func (c *Client)heartBeat(status comm.NodeStatus) error {
 	return err
 }
 
-func (c *Client)Run(){
+func (c *Client)Run() error {
 	tickC := time.NewTimer(time.Second * 10)
+
+	err := c.register()
+	if err != nil {
+		return err
+	}
+
 MainLoop:
 	for{
 		select {
@@ -104,11 +100,12 @@ MainLoop:
 
 			c.heartBeat(comm.STATUS_RUNING)
 		default:
-			c.etcd.Watch(c.workpath, c.woker.HanderDoPut, c.woker.HanderDoDelte)
+			c.etcd.Watch(c.workpath, c.woker.HanderDoPut, c.woker.HanderDoDelete)
 		}
 	}
 
 	c.shutdown <- true
+	return nil
 }
 
 func (c *Client)Stop(){
