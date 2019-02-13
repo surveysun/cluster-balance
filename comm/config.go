@@ -46,12 +46,16 @@ func (c *Config) GetStatusPath() string {
 	return fmt.Sprintf("%s/%s/status", BaseNode, c.ClusterID)
 }
 
+func (c *Config) GetMasterPath() string {
+	return fmt.Sprint("%s/%s/master", BaseNode, c.ClusterID)
+}
+
 func (c *Config) Validate() error {
 	if !utils.ValidateNodeName(c.ClusterID) {
 		return errors.New("invalid cluster id")
 	}
 	if len(c.EetcdHosts) == 0 {
-		return errors.New("invalid zookeeper config")
+		return errors.New("invalid etcd config")
 	}
 	return nil
 }

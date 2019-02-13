@@ -47,9 +47,22 @@ func NewClient(config *comm.Config, node *pb.NodeSpec, woker Worker) (*Client, e
 	}, nil
 }
 
+func (c *Client)mangerExist() bool {
+	kvs, err := c.etcd.GetAll(c.config.GetMasterPath())
+	if len(kvs) > 0 && err == nil {
+		return true
+	}
+
+	return false
+}
+
 func (c *Client)register() error {
 	if c.node == nil {
 		return errors.New("node config is error")
+	}
+
+	if !c.mangerExist() {
+		return errors.New("this is no manger run")
 	}
 
 	data, err := proto.Marshal(c.node)

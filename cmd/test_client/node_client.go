@@ -26,7 +26,7 @@ func main(){
 	log.Info("Client START")
 	config := &comm.Config{
 		ClusterID:	"sunwei_test",
-		EetcdHosts:	[]string{},
+		EetcdHosts:	[]string{"http://127.0.0.1:2379"},
 	}
 
 	woker := &Worker{}
@@ -45,10 +45,11 @@ func main(){
 
 	go func() {
 		if err := c.Run(); err != nil {
-			log.Warn("slave exited: ", err)
+			log.Fatal("client exited: ", err)
 		}
 	}()
 
+	log.Info("Node_Client Start")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, os.Interrupt)
 
@@ -62,5 +63,5 @@ func main(){
 
 	c.Stop()
 
-	log.Info("Node_Client Start")
+	log.Info("Node_Client Stop")
 }

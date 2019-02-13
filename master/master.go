@@ -220,7 +220,7 @@ MainLoop:
 
 	//elector Resign
 
-	m.etcd.Close()
+	m.etcd.CloseWatchAll()
 	m.logger().Info("manager exiting")
 	atomic.StoreInt32(&m.title, 0)
 
