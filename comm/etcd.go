@@ -3,7 +3,6 @@ package comm
 import (
 	"context"
 	"errors"
-	"fmt"
 	"go.etcd.io/etcd/clientv3"
 	"time"
 )
@@ -15,9 +14,14 @@ type EtcdHander struct {
 }
 
 type KV struct {
-	key     string
-	value   string
+	Key     string
+	Value   string
 }
+
+const (
+	EventTypePut = clientv3.EventTypePut
+	EventTypeDelete = clientv3.EventTypeDelete
+)
 
 type CallbackHanderWatchPut func(key, value []byte)error
 type CallbackHanderWatchDelete func(key, value []byte)error
@@ -65,8 +69,8 @@ func (e *EtcdHander)Get(key string)( *KV, error){
 			return nil, errors.New("key not match")
 		}
 		return &KV{
-			key:    string(re.Kvs[0].Key),
-			value:  string(re.Kvs[0].Value),
+			Key:    string(re.Kvs[0].Key),
+			Value:  string(re.Kvs[0].Value),
 		}, nil
 	}
 	return nil, nil
@@ -94,8 +98,8 @@ func (e *EtcdHander)Delete(key string)( *KV, error){
 
 	if len(re.PrevKvs) >= 1 {
 		return &KV{
-			key: string(re.PrevKvs[0].Key),
-			value: string(re.PrevKvs[0].Value),
+			Key: string(re.PrevKvs[0].Key),
+			Value: string(re.PrevKvs[0].Value),
 		},nil
 	}
 
@@ -110,33 +114,16 @@ func (e *EtcdHander)DeleteAll(key string)( *KV, error){
 
 	if len(re.PrevKvs) >= 1 {
 		return &KV{
-			key: string(re.PrevKvs[0].Key),
-			value: string(re.PrevKvs[0].Value),
+			Key: string(re.PrevKvs[0].Key),
+			Value: string(re.PrevKvs[0].Value),
 		},nil
 	}
 
 	return nil, nil
 }
 
-func (e *EtcdHander)Watch(key string, put CallbackHanderWatchPut, delete CallbackHanderWatchDelete) error {
-	rch := e.client.Watch(context.Background(), key)
-	for wresp := range rch {
-		for _, ev := range wresp.Events {
-			if ev.Type == clientv3.EventTypePut {
-				put(ev.Kv.Key, ev.Kv.Value)
-			} else if ev.Type == clientv3.EventTypeDelete {
-				delete(ev.Kv.Key, ev.Kv.Value)
-			} else {
-				fmt.Println("error event.Type:", ev.Type, " key:", string(ev.Kv.Key))
-			}
-		}
-	}
-
-	return nil
-}
-
-func (e *EtcdHander)CloseWatch(key string){
-
+func (e *EtcdHander)Watch(key string) clientv3.WatchChan {
+	return e.client.Watch(context.Background(), key)
 }
 
 func (e *EtcdHander)CloseWatchAll() error {

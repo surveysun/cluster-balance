@@ -12,27 +12,28 @@ import (
 type Worker struct {
 }
 
-func (w *Worker)HanderDoPut(key, value []byte) error{
+func (w *Worker) HanderDoPut(key, value []byte) error {
 	log.Info("HanderDoPut, key:", string(key), " value:", string(value))
 	return nil
 }
 
-func (w *Worker)HanderDoDelete(key, value []byte) error{
+func (w *Worker) HanderDoDelete(key, value []byte) error {
 	log.Info("HanderDoDelete, key:", string(key), " value:", string(value))
 	return nil
 }
 
-func main(){
+func main() {
+	log.SetLevel(log.DebugLevel)
 	log.Info("Client START")
 	config := &comm.Config{
-		ClusterID:	"sunwei_test",
-		EetcdHosts:	[]string{"http://127.0.0.1:2379"},
+		ClusterID:  "sunwei_test",
+		EetcdHosts: []string{"http://127.0.0.1:2379"},
 	}
 
 	woker := &Worker{}
 	node := &api.NodeSpec{
 		ClusterId: config.ClusterID,
-		Id:		   "test_client1",
+		Id:        "test_client1",
 		Quotas:    map[string]uint64{"channel": 10},
 		Labels:    map[string]string{"video": "face"},
 	}
@@ -53,13 +54,13 @@ func main(){
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, os.Interrupt)
 
-	MainLoop:
-		for{
-			select {
-			case  <-sc:
-				break MainLoop
-			}
+MainLoop:
+	for {
+		select {
+		case <-sc:
+			break MainLoop
 		}
+	}
 
 	c.Stop()
 

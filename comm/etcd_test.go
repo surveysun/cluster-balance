@@ -42,14 +42,14 @@ func TestEtcdHander_Watch(t *testing.T) {
 		t.Fatal("NewEtcdHander err:", err)
 	}
 
-	go etcd.Watch("/home/sunwei/test-2", handle_put, handle_delete)
+	etcd.Watch("/home/sunwei/test-2")
 
 	etcd.Put("/home/sunwei/test-2", "test-111")
 	kv, err := etcd.Get("/home/sunwei/test-2")
 	if err != nil{
 		t.Fatal("Get err:", kv)
 	}
-	t.Log("Get key:", kv.key, " value:", kv.value)
+	t.Log("Get key:", kv.Key, " value:", kv.Value)
 
 	err = etcd.Put("/home/sunwei/test-2", "test-222")
 	if err != nil {
@@ -78,7 +78,7 @@ func TestEtcdHander_Watch(t *testing.T) {
 	kvs, err := etcd.GetAll("/home/sunwei/test-2")
 	t.Log("len kvs:", len(kvs))
 	for _, kv := range kvs{
-		t.Log("key:", kv.key, " value:",kv.value)
+		t.Log("key:", kv.Key, " value:",kv.Value)
 	}
 	if len(kvs) != 10 {
 		t.Fatal("GetAll error")
