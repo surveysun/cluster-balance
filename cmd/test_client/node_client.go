@@ -27,7 +27,7 @@ func main() {
 	log.Info("Client START")
 	config := &comm.Config{
 		ClusterID:  "sunwei_test",
-		EetcdHosts: []string{"http://127.0.0.1:2379"},
+		EtcdHosts: []string{"http://127.0.0.1:2379"},
 	}
 
 	woker := &Worker{}

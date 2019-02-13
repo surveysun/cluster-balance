@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+option go_package="gitlab.sz.sensetime.com/viper/resource-allocator/api/example";
+option java_package="com.sensetime.viper.resource_allocator.example";
+package sensetime.viper.resource_allocator.example;
+
+import "google/api/annotations.proto";
+
+import "gitlab.sz.sensetime.com/viper/resource-allocator/pb/resource-allocator.proto";
+
+message ResourceResponse {
+    string node_id = 1;
+}
+
+message ListNodesRequest {
+}
+
+message ListNodesResponse {
+    repeated NodeSpec specs = 1;
+}
+
+message ListResourcesRequest {
+    string node_id = 1;
+}
+
+message ListResourcesResponse {
+    repeated ResourceSpec specs = 1;
+}
+
+service ManagerService {
+    rpc AddResource(ResourceSpec) returns (ResourceResponse) {
+        option (google.api.http) = {
+            post: "/v1/resources/{id}"
+            body: "*"
+        };
+    }
+    rpc RemoveResource(ResourceSpec) returns (ResourceResponse) {
+        option (google.api.http) = {
+            delete: "/v1/resources/{id}"
+        };
+    }
+
+    rpc GetResource(ResourceSpec) returns (ResourceSpec) {
+        option (google.api.http) = {
+            get: "/v1/resources/{id}"
+        };
+    }
+
+    rpc ListResources(ListResourcesRequest) returns (ListResourcesResponse) {
+        option (google.api.http) = {
+            get: "/v1/resources"
+        };
+    }
+
+    rpc ListNodes(ListNodesRequest) returns (ListNodesResponse) {
+        option (google.api.http) = {
+            get: "/v1/nodes"
+        };
+    }
+
+    rpc GetNode(NodeSpec) returns (NodeSpec) {
+        option (google.api.http) = {
+            get: "/v1/nodes/{id}"
+        };
+    }
+}

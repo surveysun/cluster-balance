@@ -1,0 +1,11 @@
+{
+  "etcd": {
+    "cluster_id": "sunwei_test",
+    "etcd_hosts": [
+      "http://127.0.0.1:2379"
+    ]
+  },
+  "grpc_endpoint": ":8091",
+  "http_endpoint": ":8081",
+  "manager_id": "test_Master_1"
+}

@@ -42,7 +42,7 @@ func NewMaster(config *comm.Config, masterID string) (*Master, error) {
 		return nil, err
 	}
 
-	etcd, err := comm.NewEtcdHander(config.EetcdHosts)
+	etcd, err := comm.NewEtcdHander(config.EtcdHosts)
 	if err != nil {
 		return nil, err
 	}
@@ -198,6 +198,14 @@ func (m *Master) dispatchCommand(req request) {
 		} else {
 			m.addResource(pb.ResourceSpec(v))
 		}
+		break
+	case removeResourceRequest:
+		if !m.isLeader() {
+			req.reply <- ErrNotLeader
+		}else {
+			m.deleteResource(pb.ResourceSpec(v))
+		}
+		break
 	default:
 		req.reply <- errors.New("unknown command")
 	}

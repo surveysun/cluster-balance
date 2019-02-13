@@ -1,0 +1,351 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "gitlab.sz.sensetime.com/viper/resource-allocator/pb/example.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/nodes": {
+      "get": {
+        "operationId": "ListNodes",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/exampleListNodesResponse"
+            }
+          }
+        },
+        "tags": [
+          "ManagerService"
+        ]
+      }
+    },
+    "/v1/nodes/{id}": {
+      "get": {
+        "operationId": "GetNode",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/resource_allocatorNodeSpec"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cluster_id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "payload",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          }
+        ],
+        "tags": [
+          "ManagerService"
+        ]
+      }
+    },
+    "/v1/resources": {
+      "get": {
+        "operationId": "ListResources",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/exampleListResourcesResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ManagerService"
+        ]
+      }
+    },
+    "/v1/resources/{id}": {
+      "get": {
+        "operationId": "GetResource",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/resource_allocatorResourceSpec"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "assigned_node",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "payload",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "status.version",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "status.payload",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "creation_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ManagerService"
+        ]
+      },
+      "delete": {
+        "operationId": "RemoveResource",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/exampleResourceResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ManagerService"
+        ]
+      },
+      "post": {
+        "operationId": "AddResource",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/exampleResourceResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/resource_allocatorResourceSpec"
+            }
+          }
+        ],
+        "tags": [
+          "ManagerService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "exampleListNodesResponse": {
+      "type": "object",
+      "properties": {
+        "specs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resource_allocatorNodeSpec"
+          }
+        }
+      }
+    },
+    "exampleListResourcesResponse": {
+      "type": "object",
+      "properties": {
+        "specs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/resource_allocatorResourceSpec"
+          }
+        }
+      }
+    },
+    "exampleResourceResponse": {
+      "type": "object",
+      "properties": {
+        "node_id": {
+          "type": "string"
+        }
+      }
+    },
+    "resource_allocatorNodeSpec": {
+      "type": "object",
+      "properties": {
+        "cluster_id": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "quotas": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "uint64"
+          }
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "status": {
+          "$ref": "#/definitions/resource_allocatorNodeStatus"
+        },
+        "payload": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "resource_allocatorNodeStatus": {
+      "type": "object",
+      "properties": {
+        "quotas": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "uint64"
+          }
+        }
+      }
+    },
+    "resource_allocatorResourceSpec": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "uint64"
+          }
+        },
+        "required_labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "assigned_node": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "payload": {
+          "type": "string",
+          "format": "byte"
+        },
+        "status": {
+          "$ref": "#/definitions/resource_allocatorResourceStatus"
+        },
+        "creation_time": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "resource_allocatorResourceStatus": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "format": "int64"
+        },
+        "payload": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    }
+  }
+}

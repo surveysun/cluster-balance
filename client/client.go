@@ -35,7 +35,7 @@ func NewClient(config *comm.Config, node *pb.NodeSpec, woker Worker) (*Client, e
 		return nil, err
 	}
 
-	etcd, err := comm.NewEtcdHander(config.EetcdHosts)
+	etcd, err := comm.NewEtcdHander(config.EtcdHosts)
 	if err != nil {
 		return nil, err
 	}

@@ -1,22 +1,19 @@
 package comm
 
 import (
+	"cluster-balance/utils"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"cluster-balance/utils"
 )
 
 type Config struct {
-	ClusterID       string
-	EetcdHosts      []string
+	ClusterID string   `json:"cluster_id"`
+	EtcdHosts []string `json:"etcd_hosts"`
 }
 
-
 const BaseNode = "/cluster_balance"
-
-
 
 func LoadConfig(fn string) (*Config, error) {
 	data, err := ioutil.ReadFile(fn)
@@ -54,7 +51,7 @@ func (c *Config) Validate() error {
 	if !utils.ValidateNodeName(c.ClusterID) {
 		return errors.New("invalid cluster id")
 	}
-	if len(c.EetcdHosts) == 0 {
+	if len(c.EtcdHosts) == 0 {
 		return errors.New("invalid etcd config")
 	}
 	return nil
